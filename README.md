@@ -1,8 +1,9 @@
-# research-campaign
+# Claude Math Research Skill
 
 [中文说明](README.zh-CN.md)
 
-A Claude Code skill for doing math research with many sub-agents.
+A Claude Code skill (`research-campaign`) for doing math research with many sub-agents: pushing bounds and
+records, searching the literature, checking proofs, and formalizing in Lean.
 
 ## Where it comes from
 
@@ -54,8 +55,12 @@ stopped 7 of 30 launches, all of them rightly.
 
 ## Install and use
 
-Copy this folder to `~/.claude/skills/research-campaign/`, or to `.claude/skills/` inside one project. You need
-Python 3.11+. Lean and LaTeX are optional.
+```bash
+git clone https://github.com/OctopusTide/claude-math-research-skill ~/.claude/skills/research-campaign
+```
+
+Or clone it into `.claude/skills/research-campaign` inside one project. You need Python 3.11+. Lean and LaTeX are
+optional.
 
 Then ask Claude, for example: "start a campaign to beat the record for X", or "continue the campaign".
 

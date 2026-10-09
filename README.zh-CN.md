@@ -1,8 +1,9 @@
-# research-campaign
+# Claude 数学研究技能
 
 [English](README.md)
 
-一个 Claude Code 技能：让一群子 agent 一起做数学研究。
+一个 Claude Code 技能（`research-campaign`），让一群子 agent 一起做数学研究：冲界、刷纪录、查文献、检查证明、做 Lean
+形式化。
 
 ## 来由
 
@@ -50,8 +51,11 @@
 
 ## 安装和使用
 
-把整个文件夹复制到 `~/.claude/skills/research-campaign/`，或者某个项目的 `.claude/skills/` 下。需要 Python 3.11+，Lean
-和 LaTeX 可选。
+```bash
+git clone https://github.com/OctopusTide/claude-math-research-skill ~/.claude/skills/research-campaign
+```
+
+也可以克隆到某个项目的 `.claude/skills/research-campaign` 下，只给那个项目用。需要 Python 3.11+，Lean 和 LaTeX 可选。
 
 然后直接跟 Claude 说，比如"开个新战役，冲 X 的纪录"，或者"继续战役"。
 
