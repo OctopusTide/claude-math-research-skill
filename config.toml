@@ -1,0 +1,9 @@
+# Machine settings for the research-campaign skill (shipped defaults: all empty).
+# Put your own values in config.local.toml next to this file (same keys); it overrides this one and is not part
+# of the published skill.
+
+python        = ""   # Python >= 3.11 used to run the scripts (stdlib only); empty = "python" / "python3" on PATH
+projects_root = ""   # folder where research projects live; empty = ask the user at kickoff
+lean_bin      = ""   # folder containing lean and lake; empty = use the ones on PATH (elan)
+mathlib_cache = ""   # local Mathlib cache to unpack instead of downloading; empty = `lake exe cache get`
+typesetting   = ""   # optional tool that renders Markdown+LaTeX to HTML when no TeX engine is installed

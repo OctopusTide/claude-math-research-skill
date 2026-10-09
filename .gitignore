@@ -1,0 +1,4 @@
+﻿# machine-local settings (see config.toml / budget.toml)
+*.local.toml
+__pycache__/
+*.pyc

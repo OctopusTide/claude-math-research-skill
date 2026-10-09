@@ -1,0 +1,12 @@
+# Budget for research campaigns (shipped defaults).
+# USER-OWNED: put your own numbers in budget.local.toml next to this file (same keys); it overrides this one and
+# is not part of the published skill. A campaign can override again with its own budget.toml.
+# Claude only reads these files and never writes them. check_launch.py re-reads them on every launch, so a change
+# takes effect immediately (running agents are not killed; new launches queue until they fit).
+
+max_concurrent_agents = 4      # agents running at the same time
+total_memory_gb       = 8      # sum of memory allocated to all running agents
+per_agent_memory_gb   = 4      # most memory any single agent may get
+
+# Optional scheduling knob:
+max_active_per_or_node = 2     # at most this many routes attacking the same OR node at once
