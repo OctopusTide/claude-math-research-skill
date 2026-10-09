@@ -1,42 +1,50 @@
 # research-campaign
 
-A Claude Code skill for running **multi-agent math research campaigns** (pushing a record or an explicit bound,
-improving a constant, attacking a lemma chain, certifying a computation) with cheap gates in front of every
-expensive step.
+A Claude Code skill for doing math research with a team of subagents: beating a record, pushing an explicit
+bound, improving a constant, attacking a chain of lemmas, or certifying a computation.
 
-It was built from the retrospective of a real multi-agent campaign, where most of the waste was decidable in
-advance: attacks whose ideal ceiling was below the target, obstructions already stated in a cited paper, borrowed
-theorems whose hypotheses did not match, duplicated routes, a record that had already been posted on a faculty
-page, and results checked four times while unchecked relayed claims held the real errors.
+It grew out of a long multi-agent campaign. Looking back, most of the wasted tokens could have been spotted
+before anything was launched:
 
-## What it does
+- attacks whose best possible outcome still fell short of the target;
+- obstructions already written down in a paper we cited;
+- borrowed theorems whose hypotheses didn't fit;
+- two agents doing the same job;
+- a record that had already been beaten, posted on someone's faculty page;
+- results checked four times while the real errors sat in claims nobody checked.
 
-A 15-phase pipeline, with scripts that enforce the rules mechanically:
+The skill puts a cheap check in front of each of these.
 
-1. **Kickoff** with a user-owned budget (agents, memory).
-2. **Literature pool**: a rough sweep, then verifiers by source class, then close reading; target-string search,
-   personal pages, a sweep of AI/computational-discovery papers' full texts, and released artifacts
-   (constructions, code) recorded for reuse.
-3. **Target quantification** by two blind agents with different methods, cross-checked link by link; the
-   sensitivity table is in the record method's own parameters.
-4. **AND/OR problem tree** with small, numerically targeted leaves; a **tool hunt** per bottleneck node.
-5. **Route cards** and an **ideal-ceiling gate** (GO / KILL / CONJ / UNCERTAIN → scout) before any attack.
-6. **Launch gate** (`check_launch.py`): budget, target status, complete cards, dedup by method class and
-   deliverable, killed-class relaunch rules, per-node limits, stale-prompt hash.
-7. **Attacks** with content-based return conditions (no time caps).
-8. **One independent check per result version** (a registry refuses a second check).
-9. **Stop rule** (root blocked, or one barrier blocking three method classes).
-10. **Freeze → one final audit → paper + Lean tracks → delivery.** Nothing is published without the user.
+## How it works
+
+1. **Kickoff.** You set the budget: how many agents, how much memory.
+2. **Literature pool.** One agent sweeps wide, others verify by source type, then the important papers get a close
+   read. The search covers the target number itself, personal pages, the full text of recent AI and
+   computational-discovery papers, and any released constructions or code.
+3. **Target.** Two agents work out independently what exactly has to improve, and their answers are checked
+   against each other step by step.
+4. **Problem tree.** The goal is split into an AND/OR tree of small subproblems, each with a numeric target. For
+   each bottleneck, an agent looks for tools other people have found.
+5. **Route cards.** Every route gets its best-case ceiling worked out before anyone attacks it. If the ceiling
+   misses the target, the route is dropped.
+6. **Launch check.** `check_launch.py` looks at the budget, the target, duplicates, earlier kills and stale prompts.
+7. **Attacks** come back when they reach the target, hit a named barrier, find the ceiling was wrong, need a new
+   lemma, or fail three different ways. There are no time limits.
+8. **One independent check per result.** A second check of the same version is refused.
+9. **Stop rule.** If the root is blocked, or one barrier has stopped three different methods, the campaign stops
+   and tells you why.
+10. **Closing.** Freeze the results, run one audit of the whole chain, then write the paper and the Lean
+    formalisation in parallel.
 
 ## Install
 
-Copy this folder to `~/.claude/skills/research-campaign/` (all projects) or to `<project>/.claude/skills/` (one
-project). Requirements: Claude Code with subagents, web search/fetch, a shell, and Python 3.11+ (stdlib only).
-Lean 4 + Mathlib and a TeX engine are optional.
+Copy this folder to `~/.claude/skills/research-campaign/` to use it everywhere, or to `<project>/.claude/skills/`
+for a single project. You need Claude Code with subagents, web search and a shell, plus Python 3.11+ (standard
+library only). Lean 4 + Mathlib and a TeX engine are optional.
 
-## Configure (all optional, all yours)
+## Configure
 
-Create these next to `SKILL.md`; they override the shipped defaults and are never written by Claude:
+Put your own settings next to `SKILL.md`:
 
 ```toml
 # config.local.toml
@@ -55,70 +63,67 @@ per_agent_memory_gb    = 6
 max_active_per_or_node = 2
 ```
 
-A campaign can override the budget again with its own `budget.toml`.
+A campaign can override the budget with its own `budget.toml`.
 
 ## Use
 
-Ask Claude in your own words, e.g. "start a campaign to beat the record for X", "resume the campaign", "push this
-bound below 1.2". The skill creates `campaigns/<date>-<slug>/` in your project folder, with card files
-(`CAMPAIGN.md`, `tree.md`, `routes.md`, `barriers.md`, `results.md`, `ledger.md`, `lit_pool/`) that the scripts
-read and update. For a single-agent task under about 30 minutes it runs a light mode without the campaign files.
+Just ask: "start a campaign to beat the record for X", "resume the campaign", "push this bound below 1.2". The
+skill sets up `campaigns/<date>-<slug>/` in your project with the card files the scripts read and update
+(`CAMPAIGN.md`, `tree.md`, `routes.md`, `barriers.md`, `results.md`, `ledger.md`, `lit_pool/`). Small one-agent
+tasks of under half an hour get a light mode without all that.
 
-Run `python -I tests/selftest.py` after changing any script.
+After changing a script, run `python -I tests/selftest.py`.
 
 ## Results
 
-On long multi-agent campaigns the skill saves **roughly 20% of subagent tokens**. In a blind replay of a real
-campaign window (30 launches, 3.7 hours, 9.7M tokens), the gate killed 7 launches, all correctly, for an 18.5%
-net saving after its own cost. Scouts and deferrals were counted as zero saving, so this is conservative.
+On long campaigns it saves about 20% of subagent tokens. We replayed a 3.7-hour window of a real campaign blind
+(30 launches, 9.7M tokens). The gate stopped 7 launches, all of them rightly, for an 18.5% net saving after
+paying for itself.
 
-As a regression suite we also built 203 synthetic launch-gate cases with one seeded fault each (17 fault types,
-12 areas of mathematics). With Sonnet 5.5 as the gate, 97% of verdicts were right, with no false kills and no
-false passes; the reason category also matched in 89%.
+We also wrote 203 test cases, each a campaign snapshot with one planted mistake (17 kinds of mistake, 12 areas of
+math). With Sonnet 5.5 as the gate it got 97% right, and it never stopped a good launch or waved a bad one
+through.
+
+Both tests are small and in-house, so read the numbers as a ballpark.
 
 ## Problems we found
 
-1. **A wrongful merge.** The gate merged a launch that shared some reading with another run but delivered
-   something different (calibrated numbers the next phase relied on). Fixed: dedup compares deliverables, and a
-   partial overlap is trimmed, not merged. The re-test passed.
-2. **Results hidden in a paper's body are missed.** A scoop that appeared only inside a machine-learning paper,
-   whose abstract never names the problem, was missed in every run. A "methods-paper sweep" was added, but agents
-   still skipped it in re-tests, so this is an **open problem**.
-3. **No saving on short tasks.** On ~30-minute single-agent tasks the skill costs 18-37% more tokens (about 15k
-   tokens of reading). A light mode without campaign files was added for that size.
-4. **Confirming what a theorem already settles.** An agent ran a solver for 7 minutes after a published theorem
-   had already ruled the target out. Fixed: a KILL backed by a theorem is final.
-5. **Targets too coarse.** Target quantification stopped at the goal's own unit ("need size 368") instead of the
-   record method's parameters (which part of the record construction must improve). Fixed in the quantification
-   prompt.
-6. **Ambiguous handling of a moved record.** In unattended runs one agent stopped at the scoop and another
-   retargeted. Now: report it, then retarget to the true record if the ceiling gate passes.
-7. **Ignoring released constructions.** Runs that knew the record started from scratch. Now attacks on
-   construction records start from the released construction or code.
-8. **Checks deferred for off-path results.** Fixed: every result gets its one check when it is registered.
-9. **Weaker models as gates.** Haiku follows explicit rules well but is noisy as a gate on real research
-   transcripts and searches literature shallowly; use a stronger model for gating and literature.
-10. **"Wait" chosen over "scout" or "trim".** Four of the six misses on the seeded suite were DEFER where the
-    answer was a ceiling scout or a trimmed launch. Nothing is wasted, but the useful part starts later. (Of the
-    other two, one was a case with wrong numbers that the gate itself caught, and one was MERGE instead of KILL.)
-11. **The stop rule is noticed per route, not per campaign.** When one barrier already blocked three method
-    classes, the gate killed the fourth route every time but named the campaign stop rule in only 5 of 12 cases.
-    `status.py` and `tree_status.py` raise this signal mechanically; rely on them, not on the gate's prose.
-12. **Evaluation limits.** The replay is in-sample (the skill was built from the same campaign) and covers one
-    window; the seeded cases are synthetic and were written and judged by the same model family. The numbers are
-    indicative, not a benchmark.
+1. **A wrong merge.** The gate merged two launches that shared some reading but produced different things. It now
+   compares what each run delivers, and a partial overlap gets trimmed instead of merged.
+2. **Results buried in a paper's body.** A record that appeared only inside a machine-learning paper, with nothing
+   in the abstract, was missed every time. We added a sweep through the full text of methods papers, but agents
+   still skip it. This one is still open.
+3. **No savings on small tasks.** On ~30-minute tasks the skill cost 18–37% more tokens, mostly from reading it.
+   Those tasks now get a light mode.
+4. **Running a solver on a settled question.** One agent spent 7 minutes confirming something a published theorem
+   had already ruled out. A kill backed by a theorem is now final.
+5. **Targets too coarse.** Target work stopped at "we need size 368" instead of saying which part of the record
+   construction has to get better. The quantification prompt now asks for that.
+6. **Moved records.** When the record turned out to have moved, one agent stopped and another kept going. Now it
+   reports the new record and retargets, as long as the new target still clears the ceiling check.
+7. **Starting from scratch.** Runs that knew the record construction rebuilt it from zero. They now start from the
+   released construction or code.
+8. **Late checks.** Results off the main line had their check put off. Every result now gets its check when it is
+   registered.
+9. **Weaker models as the gate.** Haiku follows clear rules fine, but it is noisy on real transcripts and shallow
+   at literature search. Use a stronger model for those two jobs.
+10. **Waiting instead of scouting.** Most misses on the test cases chose "wait" where the right call was a quick
+    ceiling scout or a trimmed launch.
+11. **The stop rule gets lost in the prose.** When one barrier had already blocked three methods, the gate always
+    killed the fourth route but mentioned the campaign stop rule only 5 times out of 12. `status.py` and
+    `tree_status.py` flag it regardless.
 
 ## Files
 
-- `SKILL.md`: the pipeline, standing rules and user touchpoints.
-- `references/`: one file per phase group (literature, target and tree, routes and attack, closing).
-- `prompts/`: templates for every subagent kind; `scripts/make_prompt.py` fills them from the campaign state.
+- `SKILL.md`: the pipeline, the standing rules and when to ask the user.
+- `references/`: one file per group of phases (literature, target and tree, routes and attack, closing).
+- `prompts/`: templates for each kind of subagent, filled in by `scripts/make_prompt.py`.
 - `scripts/`: `init_campaign`, `status`, `make_prompt`, `check_launch`, `finish_run`, `result`, `merge_pool`,
   `tree_status`, `rclib`.
 - `templates/campaign/`: the card files a new campaign starts from.
-- `tests/selftest.py`: end-to-end test of every gate on a throwaway campaign.
-- `config.toml`, `budget.toml`: shipped defaults (override with the `.local.toml` files).
+- `tests/selftest.py`: an end-to-end test of every gate on a throwaway campaign.
+- `config.toml`, `budget.toml`: shipped defaults.
 
 ## License
 
-MIT; see `LICENSE`.
+MIT
